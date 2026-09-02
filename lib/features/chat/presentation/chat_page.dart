@@ -28,6 +28,7 @@ import 'chat_realtime_controller.dart';
 import 'chat_realtime_state.dart';
 import 'chat_image_editor_page.dart';
 import 'chat_visibility_provider.dart';
+import 'chat_visibility_service.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   final int coupleId;
@@ -81,6 +82,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void initState() {
     super.initState();
 
+    ChatVisibilityService.enter(
+      widget.coupleId,
+    );
+
     _itemPositionsListener.itemPositions.addListener(
       _onItemPositionsChanged,
     );
@@ -94,47 +99,26 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         _initializeUnreadBoundary();
       },
     );
-
-    Future.microtask(
-      () {
-        if (!mounted) {
-          return;
-        }
-
-        ref
-            .read(
-              currentChatCoupleIdProvider.notifier,
-            )
-            .state = widget.coupleId;
-      },
-    );
   }
 
   @override
   void dispose() {
+    ChatVisibilityService.leave(
+      widget.coupleId,
+    );
+
     _incomingPreviewTimer?.cancel();
+
     _messageController.dispose();
+
     _itemPositionsListener.itemPositions.removeListener(
       _onItemPositionsChanged,
     );
 
-    Future.microtask(
-      () {
-        if (!mounted) {
-          return;
-        }
-
-        ref
-            .read(
-              currentChatCoupleIdProvider.notifier,
-            )
-            .state = widget.coupleId;
-      },
-    );
-
     /*
-     * STOMP disconnect 하지 않음
-     */
+   * STOMP connection은
+   * 여기서 disconnect 하지 않음
+   */
     super.dispose();
   }
 
