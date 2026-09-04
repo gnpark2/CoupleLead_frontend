@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -10,6 +9,10 @@ class LocalNotificationService {
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+
+  static const String chatChannelId = 'couplead_chat';
+
+  static const String chatChannelName = '채팅 알림';
 
   Future<void> initialize() async {
     const windows = WindowsInitializationSettings(
@@ -40,6 +43,22 @@ class LocalNotificationService {
          */
       },
     );
+
+    if (Platform.isAndroid) {
+      const channel = AndroidNotificationChannel(
+        chatChannelId,
+        chatChannelName,
+        description: 'Couplead 채팅 메시지 알림',
+        importance: Importance.high,
+      );
+
+      await _plugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(
+            channel,
+          );
+    }
   }
 
   Future<void> showChatNotification({

@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/device/presentation/device_provider.dart';
 import '../../features/media/presentation/media_provider.dart';
 import '../../features/media/presentation/media_room_provider.dart';
 import '../../features/anniversary/presentation/anniversary_provider.dart';
@@ -11,6 +14,7 @@ import '../../features/user/presentation/user_provider.dart';
 import '../../features/widget/presentation/widget_provider.dart';
 import '../../features/media/domain/media_invite.dart';
 import '../../features/media/presentation/media_realtime_provider.dart';
+import '../notification/mobile_push_service.dart';
 
 class AuthenticatedSessionListener extends ConsumerStatefulWidget {
   final Widget child;
@@ -33,6 +37,10 @@ class _AuthenticatedSessionListenerState
 
   int? _mediaSubscribedUserId;
 
+  bool _pushNavigationChecked = false;
+
+  int? _pushRegisteredUserId;
+  
   @override
   Widget build(
     BuildContext context,
@@ -43,12 +51,71 @@ class _AuthenticatedSessionListenerState
 
     meAsync.whenData(
       (me) {
+        /*
+     * ==================================
+     * 1. Mobile Push
+     * ==================================
+     */
+        if ((Platform.isAndroid || Platform.isIOS) &&
+            _pushRegisteredUserId != me.id) {
+          _pushRegisteredUserId = me.id;
+
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) async {
+              if (!mounted) {
+                return;
+              }
+
+              final deviceApi = ref.read(
+                deviceApiProvider,
+              );
+
+              await MobilePushService.instance.registerMobileDevice(
+                deviceApi,
+              );
+
+              MobilePushService.instance.startTokenRefreshListener(
+                deviceApi,
+              );
+            },
+          );
+        }
+
+        /*
+     * ==================================
+     * 2. FCM pending navigation
+     * ==================================
+     */
+        if (!_pushNavigationChecked) {
+          _pushNavigationChecked = true;
+
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) {
+              if (!mounted) {
+                return;
+              }
+
+              MobilePushService.instance.openPendingNavigation();
+            },
+          );
+        }
+
+        /*
+     * ==================================
+     * 3. Realtime 중복 방지
+     * ==================================
+     */
         if (_subscribedUserId == me.id) {
           return;
         }
 
         _subscribedUserId = me.id;
 
+        /*
+     * ==================================
+     * 4. Couple realtime
+     * ==================================
+     */
         WidgetsBinding.instance.addPostFrameCallback(
           (_) {
             if (!mounted) {
@@ -68,6 +135,11 @@ class _AuthenticatedSessionListenerState
           },
         );
 
+        /*
+     * ==================================
+     * 5. Media realtime
+     * ==================================
+     */
         if (_mediaSubscribedUserId != me.id) {
           _mediaSubscribedUserId = me.id;
 

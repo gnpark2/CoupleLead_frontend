@@ -59,6 +59,8 @@ dependencies:
   desktop_multi_window: ^0.3.1
   audioplayers: ^6.8.1
   firebase_core: ^4.14.0
+  firebase_messaging: ^16.6.0
+  firebase_app_installations: ^0.4.3
 
 dev_dependencies:
   flutter_test:

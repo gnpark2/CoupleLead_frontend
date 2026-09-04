@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "413134926267",
+    "project_id": "couplead-4ed67",
+    "storage_bucket": "couplead-4ed67.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:413134926267:android:25ec35a0919e074bd1149e",
+        "android_client_info": {
+          "package_name": "com.example.couplead_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJNxooS1ALnMhM75stx0jy79QWKL-SMRw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

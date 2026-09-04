@@ -8,6 +8,7 @@ import '../features/auth/presentation/auth_provider.dart';
 import '../features/auth/presentation/login_page.dart';
 import '../features/auth/presentation/post_login_page.dart';
 import '../features/auth/presentation/splash_page.dart';
+import '../features/chat/presentation/chat_page.dart';
 import '../features/couple/presentation/couple_connect_page.dart';
 import '../features/media/presentation/media_room_page.dart';
 import '../features/user/presentation/change_password_page.dart';
@@ -66,6 +67,35 @@ final routerProvider = Provider<GoRouter>(
                 state,
               ) {
                 return const HomePage();
+              },
+            ),
+            GoRoute(
+              path: '/chat/:coupleId',
+              builder: (
+                context,
+                state,
+              ) {
+                final coupleId = int.tryParse(
+                  state.pathParameters['coupleId'] ?? '',
+                );
+
+                final partnerId = int.tryParse(
+                  state.uri.queryParameters['partnerId'] ?? '',
+                );
+
+                final partnerNickname =
+                    state.uri.queryParameters['partnerNickname'] ?? '상대방';
+
+                if (coupleId == null || partnerId == null) {
+                  return const HomePage();
+                }
+
+                return ChatPage(
+                  coupleId: coupleId,
+                  partnerId: partnerId,
+                  partnerNickname: partnerNickname,
+                  partnerProfileImage: null,
+                );
               },
             ),
             GoRoute(

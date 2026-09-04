@@ -13,6 +13,8 @@ typedef StompJsonCallback = void Function(
 class StompService {
   StompClient? _client;
 
+  String? _accessToken;
+
   Completer<void>? _connectCompleter;
 
   /*
@@ -43,6 +45,8 @@ class StompService {
     required String accessToken,
     void Function(Object error)? onError,
   }) async {
+    _accessToken = accessToken;
+
     if (isConnected) {
       return;
     }
@@ -53,15 +57,41 @@ class StompService {
 
     _manualDisconnect = false;
     _connectCompleter = Completer<void>();
+    _createClient(
+      onError: onError,
+    );
+
+    _client!.activate();
+
+    return _connectCompleter!.future;
+  }
+
+  void _createClient({
+    void Function(Object error)? onError,
+  }) {
+    final token = _accessToken;
+
+    if (token == null || token.isEmpty) {
+      throw StateError(
+        'STOMP access token이 없습니다.',
+      );
+    }
+
+    debugPrint(
+      'STOMP CREATE CLIENT '
+      'tokenPresent=${token.isNotEmpty}',
+    );
 
     _client = StompClient(
       config: StompConfig(
         url: ApiConstants.wsUrl,
         stompConnectHeaders: {
-          'Authorization': 'Bearer $accessToken',
+          'Authorization': 'Bearer $token',
         },
         onConnect: (frame) {
-          debugPrint('STOMP CONNECTED');
+          debugPrint(
+            'STOMP CONNECTED',
+          );
 
           _restoreSubscriptions();
 
@@ -72,28 +102,42 @@ class StompService {
         onStompError: (frame) {
           final error = frame.body ?? 'STOMP ERROR';
 
-          debugPrint('STOMP ERROR: $error');
+          debugPrint(
+            'STOMP ERROR: $error',
+          );
 
-          onError?.call(error);
+          onError?.call(
+            error,
+          );
         },
         onWebSocketError: (error) {
           debugPrint(
-            'STOMP WEBSOCKET ERROR: $error',
+            'STOMP WEBSOCKET ERROR: '
+            '$error',
           );
 
-          onError?.call(error);
+          onError?.call(
+            error,
+          );
 
           if (!(_connectCompleter?.isCompleted ?? true)) {
-            _connectCompleter!.completeError(error);
+            _connectCompleter!.completeError(
+              error,
+            );
           }
         },
         onWebSocketDone: () {
-          debugPrint('STOMP WEBSOCKET DONE');
+          debugPrint(
+            'STOMP WEBSOCKET DONE',
+          );
 
           _activeSubscriptions.clear();
 
           if (!_manualDisconnect) {
-            debugPrint('STOMP reconnect 대기 중...');
+            debugPrint(
+              'STOMP reconnect '
+              '대기 중...',
+            );
           }
         },
         reconnectDelay: const Duration(
@@ -107,10 +151,6 @@ class StompService {
         ),
       ),
     );
-
-    _client!.activate();
-
-    return _connectCompleter!.future;
   }
 
   /*
@@ -328,12 +368,10 @@ class StompService {
 
     _manualDisconnect = true;
 
-    /*
-     * 로그아웃이면 다음 로그인에서
-     * 이전 계정 subscription이 살아나면 안 된다.
-     */
     _subscriptions.clear();
     _activeSubscriptions.clear();
+
+    _accessToken = null;
 
     if (!(_connectCompleter?.isCompleted ?? true)) {
       _connectCompleter!.completeError(

@@ -2,10 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:firebase_core/firebase_core.dart';
 
+import 'core/notification/firebase_background_handler.dart';
+import 'core/notification/mobile_push_service.dart';
+import 'firebase_options.dart';
 import 'app/app.dart';
 import 'core/desktop/chat_notification_window.dart';
 import 'core/desktop/chat_notification_window_initializer.dart';
@@ -86,6 +91,24 @@ Future<void> main(
         );
       }
     }
+  }
+
+  /*
+   * 모바일 Firebase
+   */
+  if (Platform.isAndroid || Platform.isIOS) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    /*
+   * Background FCM handler
+   */
+    FirebaseMessaging.onBackgroundMessage(
+      firebaseMessagingBackgroundHandler,
+    );
+
+    await MobilePushService.instance.initialize();
   }
 
   /*

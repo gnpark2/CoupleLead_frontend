@@ -13,7 +13,6 @@ import '../../../core/notification/local_notification_service.dart';
 import '../../../core/websocket/stomp_provider.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../../chat/presentation/chat_visibility_provider.dart';
-import '../../chat/presentation/chat_visibility_service.dart';
 import '../../settings/presentation/notification_settings_provider.dart';
 import 'widget_provider.dart';
 import 'widget_realtime_key.dart';
@@ -110,18 +109,17 @@ final widgetRealtimeProvider = Provider.family<void, WidgetRealtimeKey>(
      * 현재 해당 채팅방을
      * 직접 보고 있다면 생략.
      */
-            final isViewingChat = ChatVisibilityService.isViewing(
-              key.coupleId,
+            final currentChatCoupleId = ref.read(
+              currentChatCoupleIdProvider,
             );
-
             debugPrint(
-              '[CHAT NOTIFICATION] '
-              'isViewingChat=$isViewingChat '
-              'incomingCoupleId=${key.coupleId} '
-              'current=${ChatVisibilityService.currentCoupleId}',
+              '[CHAT DEBUG] '
+              '알림 판단 '
+              'currentChatCoupleId=$currentChatCoupleId '
+              'incomingCoupleId=${key.coupleId}',
             );
 
-            if (isViewingChat) {
+            if (currentChatCoupleId == key.coupleId) {
               debugPrint(
                 '[CHAT NOTIFICATION] '
                 '채팅방을 보고 있어서 생략',
