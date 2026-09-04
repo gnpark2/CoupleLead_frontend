@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
 import '../constants/api_constants.dart';
+import '../storage/token_storage_native.dart';
 
 typedef StompJsonCallback = void Function(
   Map<String, dynamic> data,
@@ -40,6 +41,12 @@ class StompService {
 
   bool get isConnecting =>
       _connectCompleter != null && !_connectCompleter!.isCompleted;
+
+  final TokenStorage tokenStorage;
+
+  StompService({
+    required this.tokenStorage,
+  });
 
   Future<void> connect({
     required String accessToken,
