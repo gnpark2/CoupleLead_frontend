@@ -52,22 +52,15 @@ class CoupleRealtimeController {
      * 아직 STOMP 연결 전이면 연결
      */
     if (!stomp.isConnected) {
-      final accessToken = await ref
-          .read(
-            tokenStorageProvider,
-          )
-          .getAccessToken();
-
-      if (accessToken == null) {
+      try {
+        await stomp.connect(
+          onError: (error) {
+            // 필요하면 debugPrint 추가
+          },
+        );
+      } catch (e) {
         return;
       }
-
-      await stomp.connect(
-        accessToken: accessToken,
-        onError: (error) {
-          // 필요하면 debugPrint 추가
-        },
-      );
     }
 
     if (!stomp.isConnected) {

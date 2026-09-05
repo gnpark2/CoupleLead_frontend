@@ -104,25 +104,22 @@ class ChatRealtimeController
   }
 
   Future<void> _connect() async {
-    final tokenStorage = ref.read(tokenStorageProvider);
-
-    final accessToken = await tokenStorage.getAccessToken();
-
-    if (accessToken == null) {
-      return;
-    }
-
-    final stomp = ref.read(stompServiceProvider);
+    final stomp = ref.read(
+      stompServiceProvider,
+    );
 
     try {
       await stomp.connect(
-        accessToken: accessToken,
         onError: (error) {
-          print(
+          debugPrint(
             'STOMP ERROR: $error',
           );
         },
       );
+
+      if (!stomp.isConnected) {
+        return;
+      }
 
       state = state.copyWith(
         connected: true,
@@ -130,7 +127,7 @@ class ChatRealtimeController
 
       _subscribe();
     } catch (e) {
-      print(
+      debugPrint(
         'STOMP CONNECT ERROR: $e',
       );
     }

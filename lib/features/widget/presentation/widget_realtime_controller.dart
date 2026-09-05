@@ -24,24 +24,19 @@ final widgetRealtimeProvider = Provider.family<void, WidgetRealtimeKey>(
   ) {
     final stompService = ref.watch(stompServiceProvider);
 
-    final tokenStorage = ref.watch(tokenStorageProvider);
-
     final List<StompUnsubscribe> subscriptions = [];
 
     bool disposed = false;
 
     Future<void> connect() async {
-      final accessToken = await tokenStorage.getAccessToken();
-
-      if (disposed || accessToken == null) {
+      if (disposed) {
         return;
       }
 
       try {
         await stompService.connect(
-          accessToken: accessToken,
           onError: (error) {
-            print(
+            debugPrint(
               'STOMP ERROR: $error',
             );
           },
