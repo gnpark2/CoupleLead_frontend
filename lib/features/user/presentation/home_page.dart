@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/desktop/desktop_overlay_window_service.dart';
 import '../../../core/desktop/desktop_window_service.dart';
+import '../../../core/utils/media_url_utils.dart';
 import '../../../core/utils/weather_icon_utils.dart';
 import '../../anniversary/data/model/anniversary.dart';
 import '../../anniversary/presentation/anniversary_page.dart';
@@ -323,12 +324,12 @@ class _CoupleWidgetCard extends StatelessWidget {
         const SizedBox(
           height: 16,
         ),
-        _DaysTogetherCard(
-          widget: widget,
-        ),
-        const SizedBox(
-          height: 16,
-        ),
+        // _DaysTogetherCard(
+        //   widget: widget,
+        // ),
+        // const SizedBox(
+        //   height: 16,
+        // ),
         homeAnniversariesAsync.when(
           data: (anniversaries) {
             return _HomeAnniversarySection(
@@ -375,19 +376,59 @@ class _PartnerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final status = widget.partnerOnline ? '온라인' : '오프라인';
 
+    final profileImage = widget.partnerProfileImage;
+
+    final hasProfileImage =
+        profileImage != null && profileImage.trim().isNotEmpty;
+
+    final resolvedProfileImage = hasProfileImage
+        ? MediaUrlUtils.resolveChatImage(
+            profileImage,
+          )
+        : null;
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(
+          20,
+        ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 28,
-              child: Text(
-                widget.partnerNickname.isNotEmpty
-                    ? widget.partnerNickname[0].toUpperCase()
-                    : '?',
+            /*
+             * 상대방 프로필
+             */
+            if (resolvedProfileImage != null)
+              ClipOval(
+                child: Image.network(
+                  resolvedProfileImage,
+                  width: 56,
+                  height: 56,
+                  fit: BoxFit.cover,
+                  errorBuilder: (
+                    context,
+                    error,
+                    stackTrace,
+                  ) {
+                    return CircleAvatar(
+                      radius: 28,
+                      child: Text(
+                        widget.partnerNickname.isNotEmpty
+                            ? widget.partnerNickname[0].toUpperCase()
+                            : '?',
+                      ),
+                    );
+                  },
+                ),
+              )
+            else
+              CircleAvatar(
+                radius: 28,
+                child: Text(
+                  widget.partnerNickname.isNotEmpty
+                      ? widget.partnerNickname[0].toUpperCase()
+                      : '?',
+                ),
               ),
-            ),
             const SizedBox(
               width: 16,
             ),
@@ -397,14 +438,18 @@ class _PartnerCard extends StatelessWidget {
                 children: [
                   Text(
                     widget.partnerNickname,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                   ),
                   const SizedBox(
                     height: 4,
                   ),
-                  Text(status),
+                  Text(
+                    status,
+                  ),
                   if (!widget.partnerOnline &&
                       widget.partnerLastSeen != null) ...[
                     const SizedBox(
@@ -413,7 +458,9 @@ class _PartnerCard extends StatelessWidget {
                     Text(
                       '마지막 접속: '
                       '${widget.partnerLastSeen}',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall,
                     ),
                   ],
                 ],

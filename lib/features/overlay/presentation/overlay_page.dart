@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
@@ -46,7 +48,9 @@ class OverlayPage extends ConsumerWidget {
     );
 
     return settingsAsync.when(
-      data: (settings) {
+      data: (
+        settings,
+      ) {
         return _buildOverlay(
           context,
           ref,
@@ -595,6 +599,12 @@ class _LiveTimeSection extends ConsumerWidget {
       data: (
         time,
       ) {
+        debugPrint(
+          '[OVERLAY TIME] '
+          'timezone=$timezoneValue '
+          'time=$time',
+        );
+
         final hour = time.hour.toString().padLeft(
               2,
               '0',
@@ -612,6 +622,11 @@ class _LiveTimeSection extends ConsumerWidget {
         );
       },
       loading: () {
+        debugPrint(
+          '[OVERLAY TIME] '
+          'LOADING timezone=$timezoneValue',
+        );
+
         return _TimeSection(
           title: title,
           city: city,
@@ -622,6 +637,16 @@ class _LiveTimeSection extends ConsumerWidget {
         error,
         stackTrace,
       ) {
+        debugPrint(
+          '[OVERLAY TIME] '
+          'ERROR timezone=$timezoneValue '
+          'error=$error',
+        );
+
+        debugPrint(
+          stackTrace.toString(),
+        );
+
         return _TimeSection(
           title: title,
           city: city,

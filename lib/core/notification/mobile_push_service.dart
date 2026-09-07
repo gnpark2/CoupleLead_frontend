@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_app_installations/firebase_app_installations.dart';
@@ -22,6 +23,12 @@ class MobilePushService {
 
   StreamSubscription<String>? _tokenRefreshSubscription;
 
+  final StreamController<RemoteMessage> _foregroundMessageController =
+      StreamController<RemoteMessage>.broadcast();
+
+  Stream<RemoteMessage> get foregroundMessages =>
+      _foregroundMessageController.stream;
+
   Future<void> initialize() async {
     if (!Platform.isAndroid && !Platform.isIOS) {
       return;
@@ -40,8 +47,21 @@ class MobilePushService {
       (
         message,
       ) async {
+        debugPrint(
+          '[FCM FOREGROUND] '
+          'messageId=${message.messageId}',
+        );
+
+        debugPrint(
+          '[FCM FOREGROUND] '
+          'data=${message.data}',
+        );
+
         final data = message.data;
 
+        /*
+     * 채팅 Push만 처리
+     */
         if (data['type'] != 'CHAT_MESSAGE') {
           return;
         }
@@ -50,35 +70,87 @@ class MobilePushService {
           data['coupleId']?.toString() ?? '',
         );
 
-        if (coupleId == null) {
+        final senderId = int.tryParse(
+          data['senderId']?.toString() ?? '',
+        );
+
+        if (coupleId == null || senderId == null) {
+          debugPrint(
+            '[FCM FOREGROUND] '
+            'INVALID CHAT DATA',
+          );
+
           return;
         }
 
         /*
-     * 현재 이 채팅방을 직접 보고 있다면
-     * 알림을 표시하지 않는다.
+     * ======================================
+     * 현재 이 채팅방을 직접 보고 있는지 확인
+     * ======================================
      */
-        final currentChatCoupleId =
-            ChatVisibilityService.currentCoupleId;
+        final currentChatCoupleId = ChatVisibilityService.currentCoupleId;
 
         debugPrint(
           '[FCM FOREGROUND] '
-          'currentChatCoupleId=$currentChatCoupleId '
+          'currentChatCoupleId='
+          '$currentChatCoupleId '
           'incomingCoupleId=$coupleId',
         );
 
+        /*
+     * 현재 같은 채팅방을 보고 있다면
+     * STOMP로 메시지가 바로 표시되므로
+     * Android 알림은 띄우지 않는다.
+     */
         if (currentChatCoupleId == coupleId) {
+          debugPrint(
+            '[FCM FOREGROUND] '
+            'SKIP - 현재 채팅방 보는 중',
+          );
+
           return;
         }
 
-        final nickname = data['senderNickname']?.toString() ?? '상대방';
+        /*
+     * ======================================
+     * FCM notification의 title / body 사용
+     * ======================================
+     *
+     * Backend data에는 현재
+     * senderNickname/message가 없으므로
+     * message.notification에서 가져온다.
+     */
+        final nickname = message.notification?.title ?? '상대방';
 
-        final body = data['message']?.toString() ?? '새 메시지가 도착했습니다.';
+        final body = message.notification?.body ?? '새 메시지가 도착했습니다.';
 
-        await LocalNotificationService.instance.showChatNotification(
+        /*
+     * ======================================
+     * Android foreground local notification
+     * ======================================
+     */
+        await LocalNotificationService.instance.showAndroidChatNotification(
           nickname: nickname,
           message: body,
           coupleId: coupleId,
+          senderId: senderId,
+
+          /*
+       * 우선 true.
+       *
+       * notificationSettingsProvider의
+       * soundEnabled까지 연결하는 것은
+       * 다음 리팩터링에서 Riverpod 계층으로
+       * 옮겨서 처리할 수 있다.
+       */
+          soundEnabled: true,
+        );
+
+        debugPrint(
+          '[FCM FOREGROUND] '
+          'LOCAL NOTIFICATION SHOW '
+          'coupleId=$coupleId '
+          'senderId=$senderId',
         );
       },
     );
@@ -344,40 +416,53 @@ class MobilePushService {
     _tokenRefreshSubscription = null;
   }
 
-  void handleLocalNotificationPayload(
+  void handleLocalNotificationTap(
     String? payload,
   ) {
     if (payload == null || payload.isEmpty) {
       return;
     }
 
-    final parts = payload.split(':');
+    try {
+      final decoded = jsonDecode(
+        payload,
+      );
 
-    if (parts.length != 3 || parts[0] != 'chat') {
-      return;
+      if (decoded is! Map<String, dynamic>) {
+        return;
+      }
+
+      if (decoded['type'] != 'CHAT_MESSAGE') {
+        return;
+      }
+
+      final coupleId = (decoded['coupleId'] as num?)?.toInt();
+
+      final senderId = (decoded['senderId'] as num?)?.toInt();
+
+      final senderNickname = decoded['senderNickname']?.toString() ?? '상대방';
+
+      if (coupleId == null || senderId == null) {
+        return;
+      }
+
+      _pendingNavigationLocation = '/chat/$coupleId'
+          '?partnerId=$senderId'
+          '&partnerNickname='
+          '${Uri.encodeComponent(senderNickname)}';
+
+      debugPrint(
+        '[LOCAL NOTIFICATION CLICK] '
+        'PENDING '
+        '$_pendingNavigationLocation',
+      );
+
+      openPendingNavigation();
+    } catch (e) {
+      debugPrint(
+        '[LOCAL NOTIFICATION CLICK] '
+        'INVALID PAYLOAD: $e',
+      );
     }
-
-    final coupleId = int.tryParse(
-      parts[1],
-    );
-
-    final partnerId = int.tryParse(
-      parts[2],
-    );
-
-    if (coupleId == null || partnerId == null) {
-      return;
-    }
-
-    _pendingNavigationLocation = '/chat/$coupleId'
-        '?partnerId=$partnerId';
-
-    debugPrint(
-      '[LOCAL NOTIFICATION CLICK] '
-      'PENDING='
-      '$_pendingNavigationLocation',
-    );
-
-    openPendingNavigation();
   }
 }

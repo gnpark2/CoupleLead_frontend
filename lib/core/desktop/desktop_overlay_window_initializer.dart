@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:window_manager/window_manager.dart';
 
-Future<void>
-    initializeDesktopOverlayWindow() async {
-  await windowManager
-      .ensureInitialized();
+Future<void> initializeDesktopOverlayWindow() async {
+  await windowManager.ensureInitialized();
 
-  const options =
-      WindowOptions(
+  const options = WindowOptions(
     size: Size(
       360,
       500,
@@ -17,68 +15,40 @@ Future<void>
       220,
     ),
     center: true,
-    backgroundColor:
-        Colors.transparent,
-
-    /*
-     * 독립 앱처럼 taskbar에
-     * 따로 나오지 않도록 한다.
-     */
+    backgroundColor: Colors.transparent,
     skipTaskbar: true,
-
-    /*
-     * 일반 Window보다 항상 위.
-     */
     alwaysOnTop: true,
-
-    titleBarStyle:
-        TitleBarStyle.hidden,
-    windowButtonVisibility:
-        false,
+    titleBarStyle: TitleBarStyle.hidden,
+    windowButtonVisibility: false,
   );
 
-  await windowManager
-      .waitUntilReadyToShow(
+  await windowManager.waitUntilReadyToShow(
     options,
     () async {
-      await windowManager
-          .setAsFrameless();
+      await windowManager.setAsFrameless();
 
-      /*
-       * 사용자가 기존처럼
-       * 크기 변경 가능.
-       */
-      await windowManager
-          .setResizable(
+      await windowManager.setResizable(
         true,
       );
 
-      await windowManager
-          .setMinimumSize(
+      await windowManager.setMinimumSize(
         const Size(
           260,
           220,
         ),
       );
 
-      /*
-       * 일반 Window보다 항상 위.
-       */
-      await windowManager
-          .setAlwaysOnTop(
+      await windowManager.setAlwaysOnTop(
         true,
       );
 
-      await windowManager
-          .setSkipTaskbar(
+      await windowManager.setSkipTaskbar(
         true,
       );
 
-      await windowManager
-          .show();
+      await windowManager.show();
 
-      await windowManager
-          .focus();
+      await windowManager.focus();
     },
   );
 }

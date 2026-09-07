@@ -10,6 +10,9 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'core/notification/firebase_background_handler.dart';
 import 'core/notification/mobile_push_service.dart';
+import 'features/overlay/data/model/overlay_settings.dart';
+import 'features/overlay/presentation/overlay_provider.dart';
+import 'features/overlay/presentation/overlay_window_app.dart';
 import 'firebase_options.dart';
 import 'app/app.dart';
 import 'core/desktop/chat_notification_window.dart';
@@ -24,6 +27,29 @@ Future<void> main(
   List<String> args,
 ) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  tz.initializeTimeZones();
+
+  /*
+   * 중요:
+   * 각 Flutter Engine 자신의
+   * WindowController를 얻는다.
+   */
+  final currentWindow = await WindowController.fromCurrentEngine();
+
+  final arguments = _parseWindowArguments(
+    currentWindow.arguments,
+  );
+
+  final windowType = arguments['type'];
+
+  if (windowType == 'desktop_overlay') {
+    await _runOverlayWindow(
+      currentWindow,
+    );
+
+    return;
+  }
 
   /*
    * ==================================
@@ -71,14 +97,18 @@ Future<void> main(
         if (data['type'] == 'desktop_overlay') {
           await initializeDesktopOverlayWindow();
 
-          tz.initializeTimeZones();
+          // runApp(
+          //   const ProviderScope(
+          //     child: MaterialApp(
+          //       debugShowCheckedModeBanner: false,
+          //       home: OverlayPage(),
+          //     ),
+          //   ),
+          // );
 
           runApp(
             const ProviderScope(
-              child: MaterialApp(
-                debugShowCheckedModeBanner: false,
-                home: OverlayPage(),
-              ),
+              child: OverlayWindowApp(),
             ),
           );
 
@@ -117,9 +147,24 @@ Future<void> main(
    * ==================================
    */
 
-  await LocalNotificationService.instance.initialize();
+  await LocalNotificationService.instance.initialize(
+    onNotificationTap: (
+      payload,
+    ) {
+      MobilePushService.instance.handleLocalNotificationTap(
+        payload,
+      );
+    },
+  );
 
-  tz.initializeTimeZones();
+  final localNotificationLaunchPayload =
+      await LocalNotificationService.instance.getLaunchPayload();
+
+  if (localNotificationLaunchPayload != null) {
+    MobilePushService.instance.handleLocalNotificationTap(
+      localNotificationLaunchPayload,
+    );
+  }
 
   await DesktopWindowService.initializeNormalWindow();
 
@@ -136,4 +181,122 @@ Future<void> main(
   if (Platform.isWindows) {
     ChatNotificationWindowService.instance.initialize();
   }
+}
+
+Map<String, dynamic> _parseWindowArguments(
+  String raw,
+) {
+  if (raw.isEmpty) {
+    return const {};
+  }
+
+  try {
+    final decoded = jsonDecode(
+      raw,
+    );
+
+    if (decoded is Map<String, dynamic>) {
+      return decoded;
+    }
+  } catch (_) {
+    // main window
+  }
+
+  return const {};
+}
+
+Future<void> _runOverlayWindow(
+  WindowController currentWindow,
+) async {
+  /*
+   * =====================================
+   * 오버레이 Engine 전용 ProviderContainer
+   * =====================================
+   *
+   * Main Window와 공유하지 않는다.
+   */
+  final container = ProviderContainer();
+
+  /*
+   * =====================================
+   * UI를 띄우기 전에 Handler부터 등록
+   * =====================================
+   *
+   * 이게 핵심이다.
+   */
+  await currentWindow.setWindowMethodHandler(
+    (
+      call,
+    ) async {
+      switch (call.method) {
+        case 'apply_settings':
+          debugPrint(
+            '[OVERLAY WINDOW] '
+            'apply_settings received',
+          );
+
+          final arguments = call.arguments;
+
+          if (arguments is! Map) {
+            debugPrint(
+              '[OVERLAY WINDOW] '
+              'invalid settings arguments',
+            );
+
+            return false;
+          }
+
+          final json = Map<String, dynamic>.from(
+            arguments,
+          );
+
+          final settings = OverlaySettings.fromJson(
+            json,
+          );
+
+          debugPrint(
+            '[OVERLAY WINDOW] '
+            'received settings '
+            '${settings.toJson()}',
+          );
+
+          container
+              .read(
+                overlaySettingsProvider.notifier,
+              )
+              .applyExternalSettings(
+                settings,
+              );
+
+          return true;
+
+        default:
+          return null;
+      }
+    },
+  );
+
+  debugPrint(
+    '[OVERLAY WINDOW] '
+    'method handler registered',
+  );
+
+  /*
+   * Window 설정
+   */
+  await initializeDesktopOverlayWindow();
+
+  /*
+   * 중요:
+   *
+   * 위 handler에서 사용하는 container와
+   * OverlayPage가 사용하는 container가
+   * 정확히 같은 객체여야 한다.
+   */
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const OverlayWindowApp(),
+    ),
+  );
 }

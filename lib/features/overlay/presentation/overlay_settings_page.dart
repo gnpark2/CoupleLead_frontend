@@ -27,6 +27,23 @@ class OverlaySettingsPage extends ConsumerWidget {
       anniversaryListProvider,
     );
 
+    ref.listen(
+      anniversaryListProvider,
+      (
+        previous,
+        next,
+      ) {
+        next.whenData(
+          (anniversaries) {
+            validateOverlayAnniversary(
+              ref: ref,
+              anniversaries: anniversaries,
+            );
+          },
+        );
+      },
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
