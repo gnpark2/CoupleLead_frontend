@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/desktop/desktop_media_overlay_window_service.dart';
+import '../../media_overlay/data/model/media_overlay_settings.dart';
 import 'camera_setup_dialog.dart';
 import 'media_device_provider.dart';
 import 'media_layout_provider.dart';
@@ -215,6 +217,11 @@ class _MediaRoomPageState extends ConsumerState<MediaRoomPage> {
   }
 
   Future<void> _leaveRoom() async {
+    /*
+   * Media Overlay부터 종료
+   */
+    await DesktopMediaOverlayWindowService.instance.stop();
+
     try {
       await ref
           .read(
@@ -223,7 +230,8 @@ class _MediaRoomPageState extends ConsumerState<MediaRoomPage> {
           .leave();
     } catch (e) {
       debugPrint(
-        '[MEDIA] leave notify failed: $e',
+        '[MEDIA] '
+        'leave notify failed: $e',
       );
     }
 
@@ -237,7 +245,9 @@ class _MediaRoomPageState extends ConsumerState<MediaRoomPage> {
       return;
     }
 
-    context.go('/home');
+    context.go(
+      '/home',
+    );
   }
 
   Future<void> _openMediaSettings() async {
@@ -253,6 +263,88 @@ class _MediaRoomPageState extends ConsumerState<MediaRoomPage> {
     if (mounted) {
       setState(() {});
     }
+  }
+
+  Future<void> _openMediaOverlay() async {
+    final layout = await showDialog<MediaOverlayLayout>(
+      context: context,
+      builder: (
+        context,
+      ) {
+        return SimpleDialog(
+          title: const Text(
+            '오버레이 레이아웃',
+          ),
+          children: [
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).pop(
+                  MediaOverlayLayout.equal,
+                );
+              },
+              child: const ListTile(
+                leading: Icon(
+                  Icons.grid_view,
+                ),
+                title: Text(
+                  '동일 크기',
+                ),
+              ),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).pop(
+                  MediaOverlayLayout.mainOnly,
+                );
+              },
+              child: const ListTile(
+                leading: Icon(
+                  Icons.crop_landscape,
+                ),
+                title: Text(
+                  '메인 화면만',
+                ),
+              ),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).pop(
+                  MediaOverlayLayout.mainWithThumbnails,
+                );
+              },
+              child: const ListTile(
+                leading: Icon(
+                  Icons.view_quilt,
+                ),
+                title: Text(
+                  '메인 + 작은 화면',
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (layout == null) {
+      return;
+    }
+
+    final settings = MediaOverlaySettings(
+      layout: layout,
+    );
+
+    await DesktopMediaOverlayWindowService.instance.applySettings(
+      settings,
+    );
+
+    await DesktopMediaOverlayWindowService.instance.show();
   }
 
   @override
@@ -346,6 +438,16 @@ class _MediaRoomPageState extends ConsumerState<MediaRoomPage> {
               '미디어 공유',
             ),
             actions: [
+              /*
+              * 화면 공유 Overlay
+              */
+              IconButton(
+                tooltip: '화면 공유 오버레이',
+                icon: const Icon(
+                  Icons.picture_in_picture_alt,
+                ),
+                onPressed: _openMediaOverlay,
+              ),
               /*
               * 미디어 장치 설정
               */
@@ -478,11 +580,48 @@ class _MediaRoomPageState extends ConsumerState<MediaRoomPage> {
              * =========================
              */
                   Expanded(
-                    child: MediaLayout(
-                      tiles: visibleTiles,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: DesktopMediaOverlayWindowService
+                          .instance.overlayActive,
+                      builder: (
+                        context,
+                        overlayActive,
+                        child,
+                      ) {
+                        debugPrint(
+                          '[MEDIA PAGE] '
+                          'overlayActive=$overlayActive',
+                        );
+
+                        if (overlayActive) {
+                          return const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.picture_in_picture_alt,
+                                  size: 42,
+                                ),
+                                SizedBox(
+                                  height: 12,
+                                ),
+                                Text(
+                                  '화면 공유를 오버레이에서 표시 중입니다.',
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        /*
+       * Overlay가 닫히면 여기로 돌아와야 함.
+       */
+                        return MediaLayout(
+                          tiles: visibleTiles,
+                        );
+                      },
                     ),
                   ),
-
                   /*
              * =========================
              * 숨긴 영상 다시 보기

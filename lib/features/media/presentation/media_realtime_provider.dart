@@ -26,6 +26,8 @@ final mediaRealtimeProvider = Provider.family<MediaRealtimeController, int>(
   },
 );
 
+String? _lastAcceptedCallId;
+
 class MediaRealtimeController {
   final Ref ref;
   final int userId;
@@ -93,7 +95,23 @@ class MediaRealtimeController {
             break;
 
           case 'MEDIA_ACCEPTED':
-            final callId = data['callId'] as String;
+            final callId = data['callId']?.toString();
+
+            if (callId == null) {
+              return;
+            }
+
+            if (_lastAcceptedCallId == callId) {
+              debugPrint(
+                '[MEDIA-STOMP] '
+                'duplicate MEDIA_ACCEPTED ignored '
+                'callId=$callId',
+              );
+
+              return;
+            }
+
+            _lastAcceptedCallId = callId;
 
             onAccepted(
               callId,

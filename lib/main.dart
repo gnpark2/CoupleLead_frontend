@@ -7,9 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:window_manager/window_manager.dart';
 
+import 'core/desktop/desktop_media_overlay_window_initializer.dart';
+import 'core/desktop/desktop_media_overlay_window_service.dart';
 import 'core/notification/firebase_background_handler.dart';
 import 'core/notification/mobile_push_service.dart';
+import 'features/media_overlay/data/model/media_overlay_settings.dart';
+import 'features/media_overlay/presentation/media_overlay_room_provider.dart';
+import 'features/media_overlay/presentation/media_overlay_window_app.dart';
+import 'features/media_overlay/presentation/overlay_settings_provider.dart';
 import 'features/overlay/data/model/overlay_settings.dart';
 import 'features/overlay/presentation/overlay_provider.dart';
 import 'features/overlay/presentation/overlay_window_app.dart';
@@ -21,7 +28,9 @@ import 'core/desktop/chat_notification_window_service.dart';
 import 'core/desktop/desktop_overlay_window_initializer.dart';
 import 'core/desktop/desktop_window_service.dart';
 import 'core/notification/local_notification_service.dart';
-import 'features/overlay/presentation/overlay_page.dart';
+import 'features/media_overlay/presentation/media_overlay_room_provider.dart';
+
+WindowController? mainWindowController;
 
 Future<void> main(
   List<String> args,
@@ -30,99 +39,219 @@ Future<void> main(
 
   tz.initializeTimeZones();
 
+  Future<void> _runMediaOverlayWindow(
+    WindowController currentWindow,
+    Map<String, dynamic> arguments,
+  ) async {
+    final container = ProviderContainer();
+
+    final rawSettings = arguments['settings'];
+
+    if (rawSettings is Map) {
+      final settings = MediaOverlaySettings.fromJson(
+        Map<String, dynamic>.from(
+          rawSettings,
+        ),
+      );
+
+      container
+          .read(
+            mediaOverlaySettingsProvider.notifier,
+          )
+          .apply(
+            settings,
+          );
+
+      debugPrint(
+        '[MEDIA OVERLAY] '
+        'initial layout=${settings.layout}',
+      );
+    }
+
+    final mainWindowId = arguments['mainWindowId']?.toString();
+
+    if (mainWindowId == null || mainWindowId.isEmpty) {
+      return;
+    }
+
+    await currentWindow.setWindowMethodHandler(
+      (
+        call,
+      ) async {
+        switch (call.method) {
+          case 'apply_media_overlay_settings':
+            final arguments = call.arguments;
+
+            if (arguments is! Map) {
+              return false;
+            }
+
+            final json = Map<String, dynamic>.from(
+              arguments,
+            );
+
+            final settings = MediaOverlaySettings.fromJson(
+              json,
+            );
+
+            container
+                .read(
+                  mediaOverlaySettingsProvider.notifier,
+                )
+                .apply(
+                  settings,
+                );
+
+            return true;
+
+          case 'start_media_overlay':
+            final arguments = call.arguments;
+
+            if (arguments is Map) {
+              final settings = MediaOverlaySettings.fromJson(
+                Map<String, dynamic>.from(
+                  arguments,
+                ),
+              );
+
+              container
+                  .read(
+                    mediaOverlaySettingsProvider.notifier,
+                  )
+                  .apply(
+                    settings,
+                  );
+            }
+
+            final success = await container
+                .read(
+                  mediaOverlayRoomProvider.notifier,
+                )
+                .resumeSubscriptions();
+
+            return success;
+
+          // case 'close_media_overlay':
+          //   debugPrint(
+          //     '[MEDIA OVERLAY] '
+          //     'close requested',
+          //   );
+
+          //   await container
+          //       .read(
+          //         mediaOverlayRoomProvider.notifier,
+          //       )
+          //       .disconnect();
+
+          //   await windowManager.close();
+
+          //   return true;
+
+          case 'stop_media_overlay':
+            debugPrint(
+              '[MEDIA OVERLAY] '
+              'stop requested',
+            );
+
+            await container
+                .read(
+                  mediaOverlayRoomProvider.notifier,
+                )
+                .disconnect();
+
+            await windowManager.hide();
+
+            return true;
+
+          default:
+            return null;
+        }
+      },
+    );
+
+    debugPrint(
+      '[MEDIA OVERLAY] '
+      'method handler registered',
+    );
+
+    await initializeDesktopMediaOverlayWindow();
+
+    runApp(
+      UncontrolledProviderScope(
+        container: container,
+        child: MediaOverlayWindowApp(
+          mainWindowId: mainWindowId,
+        ),
+      ),
+    );
+  }
+
   /*
    * 중요:
    * 각 Flutter Engine 자신의
    * WindowController를 얻는다.
    */
-  final currentWindow = await WindowController.fromCurrentEngine();
+  if (Platform.isWindows || Platform.isMacOS) {
+    final currentWindow = await WindowController.fromCurrentEngine();
 
-  final arguments = _parseWindowArguments(
-    currentWindow.arguments,
-  );
-
-  final windowType = arguments['type'];
-
-  if (windowType == 'desktop_overlay') {
-    await _runOverlayWindow(
-      currentWindow,
+    final arguments = _parseWindowArguments(
+      currentWindow.arguments,
     );
 
-    return;
-  }
+    final windowType = arguments['type'];
 
-  /*
+    /*
+   * 일반 Overlay
+   */
+    if (windowType == 'desktop_overlay') {
+      await _runOverlayWindow(
+        currentWindow,
+      );
+
+      return;
+    }
+
+    /*
+   * Media Overlay
+   */
+    if (windowType == 'media_overlay') {
+      await _runMediaOverlayWindow(
+        currentWindow,
+        arguments,
+      );
+
+      return;
+    }
+
+    /*
+   * Chat Notification
+   */
+    if (windowType == 'chat_notification') {
+      final mainWindowId = arguments['mainWindowId']?.toString();
+
+      if (mainWindowId == null || mainWindowId.isEmpty) {
+        return;
+      }
+
+      await initializeChatNotificationWindow();
+
+      runApp(
+        ChatNotificationWindow(
+          controller: currentWindow,
+          mainWindowId: mainWindowId,
+        ),
+      );
+
+      return;
+    }
+
+    /*
    * ==================================
-   * Windows Secondary Window 확인
+   * 여기까지 왔으면 Main Window
    * ==================================
    */
-  if (Platform.isWindows) {
-    final windowController = await WindowController.fromCurrentEngine();
-
-    final rawArguments = windowController.arguments;
-
-    if (rawArguments.isNotEmpty) {
-      try {
-        final data = jsonDecode(
-          rawArguments,
-        ) as Map<String, dynamic>;
-
-        /*
-         * 채팅 알림 전용 Window
-         */
-        if (data['type'] == 'chat_notification') {
-          final mainWindowId = data['mainWindowId']?.toString();
-
-          if (mainWindowId == null || mainWindowId.isEmpty) {
-            debugPrint(
-              'CHAT NOTIFICATION '
-              'mainWindowId 없음',
-            );
-
-            return;
-          }
-
-          await initializeChatNotificationWindow();
-
-          runApp(
-            ChatNotificationWindow(
-              controller: windowController,
-              mainWindowId: mainWindowId,
-            ),
-          );
-
-          return;
-        }
-
-        if (data['type'] == 'desktop_overlay') {
-          await initializeDesktopOverlayWindow();
-
-          // runApp(
-          //   const ProviderScope(
-          //     child: MaterialApp(
-          //       debugShowCheckedModeBanner: false,
-          //       home: OverlayPage(),
-          //     ),
-          //   ),
-          // );
-
-          runApp(
-            const ProviderScope(
-              child: OverlayWindowApp(),
-            ),
-          );
-
-          return;
-        }
-      } catch (e) {
-        debugPrint(
-          'WINDOW ARGUMENT PARSE ERROR: '
-          '$e',
-        );
-      }
-    }
+    mainWindowController = currentWindow;
   }
-
   /*
    * 모바일 Firebase
    */
@@ -174,13 +303,70 @@ Future<void> main(
     ),
   );
 
-  /*
-   * 채팅 Notification Window
-   * 미리 hidden 상태로 생성
-   */
-  if (Platform.isWindows) {
-    ChatNotificationWindowService.instance.initialize();
+/*
+ * Chat Notification 초기화
+ */
+  if (Platform.isWindows || Platform.isMacOS) {
+    await ChatNotificationWindowService.instance.initialize();
   }
+
+/*
+ * 중요:
+ * Main Window Method Handler는
+ * 다른 Desktop Service 초기화가 끝난 뒤
+ * 마지막에 등록한다.
+ */
+  if (mainWindowController != null) {
+    await _registerMainWindowHandler(
+      mainWindowController!,
+    );
+  }
+}
+
+Future<void> _registerMainWindowHandler(
+  WindowController currentWindow,
+) async {
+  await currentWindow.setWindowMethodHandler(
+    (
+      call,
+    ) async {
+      debugPrint(
+        '[MAIN WINDOW] '
+        'method received=${call.method}',
+      );
+
+      switch (call.method) {
+        case 'media_overlay_closed':
+          debugPrint(
+            '[MAIN WINDOW] '
+            'media_overlay_closed received',
+          );
+
+          DesktopMediaOverlayWindowService.instance.handleOverlayClosed();
+
+          return true;
+
+        /*
+         * 채팅 알림 Window 등 Main Window가
+         * 받아야 하는 method가 있다면
+         * 여기에 모두 추가해야 한다.
+         */
+
+        default:
+          debugPrint(
+            '[MAIN WINDOW] '
+            'unknown method=${call.method}',
+          );
+
+          return null;
+      }
+    },
+  );
+
+  debugPrint(
+    '[MAIN WINDOW] '
+    'method handler registered',
+  );
 }
 
 Map<String, dynamic> _parseWindowArguments(
