@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'overlay_anniversary_validator.dart';
 import '../../anniversary/data/model/anniversary.dart';
 import 'overlay_provider.dart';
 
@@ -17,16 +16,14 @@ Future<void> validateOverlayAnniversary({
     return;
   }
 
-  final selectedId =
-      settings.anniversaryId;
+  final selectedId = settings.anniversaryId;
 
   if (selectedId == null) {
     return;
   }
 
   final exists = anniversaries.any(
-    (anniversary) =>
-        anniversary.id == selectedId,
+    (anniversary) => anniversary.id == selectedId,
   );
 
   if (exists) {

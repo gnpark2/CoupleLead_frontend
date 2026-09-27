@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
-import '../../auth/presentation/auth_provider.dart';
-import '../data/media_api.dart';
 import 'media_device_provider.dart';
 import 'media_layout_provider.dart';
 import 'media_provider.dart';

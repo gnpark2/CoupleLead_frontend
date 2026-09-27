@@ -1,12 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'dart:io';
-
 import '../../../core/network/dio_client.dart';
-import '../../../core/notification/mobile_push_service.dart';
 import '../../../core/storage/token_storage.dart';
-import '../../device/presentation/device_provider.dart';
 import '../../user/presentation/user_provider.dart';
 import '../data/auth_api.dart';
 import '../data/auth_repository.dart';

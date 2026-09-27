@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
 import '../../../core/constants/api_constants.dart';
-import '../../../core/storage/token_storage.dart';
 import '../../../core/websocket/stomp_provider.dart';
-import '../../auth/presentation/auth_provider.dart';
 import '../domain/media_invite.dart';
 
 final mediaRealtimeProvider = Provider.family<MediaRealtimeController, int>(

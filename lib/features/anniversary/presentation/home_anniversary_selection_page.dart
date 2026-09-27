@@ -6,21 +6,18 @@ import '../data/model/anniversary.dart';
 import 'anniversary_provider.dart';
 import 'anniversary_ui_helper.dart';
 
-class HomeAnniversarySelectionPage
-    extends ConsumerStatefulWidget {
+class HomeAnniversarySelectionPage extends ConsumerStatefulWidget {
   const HomeAnniversarySelectionPage({
     super.key,
   });
 
   @override
-  ConsumerState<HomeAnniversarySelectionPage>
-      createState() =>
-          _HomeAnniversarySelectionPageState();
+  ConsumerState<HomeAnniversarySelectionPage> createState() =>
+      _HomeAnniversarySelectionPageState();
 }
 
 class _HomeAnniversarySelectionPageState
-    extends ConsumerState<
-        HomeAnniversarySelectionPage> {
+    extends ConsumerState<HomeAnniversarySelectionPage> {
   /*
    * Home에 표시되는 기념일 ID.
    *
@@ -63,8 +60,7 @@ class _HomeAnniversarySelectionPageState
 
                 _selectedIds.addAll(
                   homeAnniversaries.map(
-                    (anniversary) =>
-                        anniversary.id,
+                    (anniversary) => anniversary.id,
                   ),
                 );
 
@@ -75,10 +71,8 @@ class _HomeAnniversarySelectionPageState
                 anniversaries,
               );
             },
-            loading: () =>
-                const Center(
-              child:
-                  CircularProgressIndicator(),
+            loading: () => const Center(
+              child: CircularProgressIndicator(),
             ),
             error: (
               error,
@@ -87,17 +81,14 @@ class _HomeAnniversarySelectionPageState
               return Center(
                 child: Text(
                   'Home 기념일 설정을 불러오지 못했습니다.\n$error',
-                  textAlign:
-                      TextAlign.center,
+                  textAlign: TextAlign.center,
                 ),
               );
             },
           );
         },
-        loading: () =>
-            const Center(
-          child:
-              CircularProgressIndicator(),
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
         ),
         error: (
           error,
@@ -106,8 +97,7 @@ class _HomeAnniversarySelectionPageState
           return Center(
             child: Text(
               '기념일을 불러오지 못했습니다.\n$error',
-              textAlign:
-                  TextAlign.center,
+              textAlign: TextAlign.center,
             ),
           );
         },
@@ -125,9 +115,7 @@ class _HomeAnniversarySelectionPageState
      * 빠르게 찾기 위해 사용한다.
      */
     final anniversaryMap = {
-      for (final anniversary
-          in anniversaries)
-        anniversary.id: anniversary,
+      for (final anniversary in anniversaries) anniversary.id: anniversary,
     };
 
     /*
@@ -135,34 +123,29 @@ class _HomeAnniversarySelectionPageState
      *
      * _selectedIds 순서를 그대로 유지한다.
      */
-    final selectedAnniversaries =
-        _selectedIds
-            .map(
-              (id) =>
-                  anniversaryMap[id],
-            )
-            .whereType<Anniversary>()
-            .toList();
+    final selectedAnniversaries = _selectedIds
+        .map(
+          (id) => anniversaryMap[id],
+        )
+        .whereType<Anniversary>()
+        .toList();
 
     /*
      * 선택되지 않은 기념일.
      */
-    final unselectedAnniversaries =
-        anniversaries
-            .where(
-              (anniversary) =>
-                  !_selectedIds.contains(
-                anniversary.id,
-              ),
-            )
-            .toList();
+    final unselectedAnniversaries = anniversaries
+        .where(
+          (anniversary) => !_selectedIds.contains(
+            anniversary.id,
+          ),
+        )
+        .toList();
 
     return Column(
       children: [
         Expanded(
           child: ListView(
-            padding:
-                const EdgeInsets.all(
+            padding: const EdgeInsets.all(
               16,
             ),
             children: [
@@ -175,11 +158,9 @@ class _HomeAnniversarySelectionPageState
                   context,
                 ).textTheme.titleMedium,
               ),
-
               const SizedBox(
                 height: 4,
               ),
-
               Text(
                 '선택된 기념일을 드래그해서 '
                 'Home에 표시되는 순서를 변경할 수 있습니다.',
@@ -187,7 +168,6 @@ class _HomeAnniversarySelectionPageState
                   context,
                 ).textTheme.bodySmall,
               ),
-
               const SizedBox(
                 height: 16,
               ),
@@ -195,12 +175,10 @@ class _HomeAnniversarySelectionPageState
               /*
                * 선택된 기념일이 없는 경우
                */
-              if (selectedAnniversaries
-                  .isEmpty)
+              if (selectedAnniversaries.isEmpty)
                 const Card(
                   child: Padding(
-                    padding:
-                        EdgeInsets.all(
+                    padding: EdgeInsets.all(
                       20,
                     ),
                     child: Center(
@@ -216,30 +194,22 @@ class _HomeAnniversarySelectionPageState
                *
                * ReorderableListView를 사용한다.
                */
-              if (selectedAnniversaries
-                  .isNotEmpty)
+              if (selectedAnniversaries.isNotEmpty)
                 ReorderableListView.builder(
                   shrinkWrap: true,
-                  physics:
-                      const NeverScrollableScrollPhysics(),
-                  buildDefaultDragHandles:
-                      false,
-                  itemCount:
-                      selectedAnniversaries
-                          .length,
+                  physics: const NeverScrollableScrollPhysics(),
+                  buildDefaultDragHandles: false,
+                  itemCount: selectedAnniversaries.length,
                   onReorder: (
                     oldIndex,
                     newIndex,
                   ) {
                     setState(() {
-                      if (newIndex >
-                          oldIndex) {
+                      if (newIndex > oldIndex) {
                         newIndex -= 1;
                       }
 
-                      final id =
-                          _selectedIds
-                              .removeAt(
+                      final id = _selectedIds.removeAt(
                         oldIndex,
                       );
 
@@ -253,9 +223,7 @@ class _HomeAnniversarySelectionPageState
                     context,
                     index,
                   ) {
-                    final anniversary =
-                        selectedAnniversaries[
-                            index];
+                    final anniversary = selectedAnniversaries[index];
 
                     return Card(
                       key: ValueKey(
@@ -265,46 +233,35 @@ class _HomeAnniversarySelectionPageState
                         /*
                          * 드래그 핸들
                          */
-                        leading:
-                            ReorderableDragStartListener(
+                        leading: ReorderableDragStartListener(
                           index: index,
-                          child:
-                              const Padding(
-                            padding:
-                                EdgeInsets
-                                    .all(
+                          child: const Padding(
+                            padding: EdgeInsets.all(
                               8,
                             ),
                             child: Icon(
-                              Icons
-                                  .drag_handle,
+                              Icons.drag_handle,
                             ),
                           ),
                         ),
-
                         title: Row(
                           children: [
                             Icon(
                               anniversaryIcon(
-                                anniversary
-                                    .type,
+                                anniversary.type,
                               ),
                               size: 20,
                             ),
-
                             const SizedBox(
                               width: 8,
                             ),
-
                             Expanded(
                               child: Text(
-                                anniversary
-                                    .title,
+                                anniversary.title,
                               ),
                             ),
                           ],
                         ),
-
                         subtitle: Text(
                           '${anniversaryTypeLabel(anniversary)}'
                           ' · '
@@ -314,21 +271,15 @@ class _HomeAnniversarySelectionPageState
                         /*
                          * Home 표시에서 제거
                          */
-                        trailing:
-                            IconButton(
-                          tooltip:
-                              'Home에서 제거',
-                          icon:
-                              const Icon(
-                            Icons
-                                .close,
+                        trailing: IconButton(
+                          tooltip: 'Home에서 제거',
+                          icon: const Icon(
+                            Icons.close,
                           ),
                           onPressed: () {
                             setState(() {
-                              _selectedIds
-                                  .remove(
-                                anniversary
-                                    .id,
+                              _selectedIds.remove(
+                                anniversary.id,
                               );
                             });
                           },
@@ -337,7 +288,6 @@ class _HomeAnniversarySelectionPageState
                     );
                   },
                 ),
-
               const SizedBox(
                 height: 28,
               ),
@@ -351,33 +301,23 @@ class _HomeAnniversarySelectionPageState
                     '추가 가능한 기념일',
                     style: Theme.of(
                       context,
-                    )
-                        .textTheme
-                        .titleMedium,
+                    ).textTheme.titleMedium,
                   ),
-
                   const Spacer(),
-
                   Text(
                     '${unselectedAnniversaries.length}개',
                     style: Theme.of(
                       context,
-                    )
-                        .textTheme
-                        .bodySmall,
+                    ).textTheme.bodySmall,
                   ),
                 ],
               ),
-
               const SizedBox(
                 height: 8,
               ),
-
-              if (unselectedAnniversaries
-                  .isEmpty)
+              if (unselectedAnniversaries.isEmpty)
                 const Padding(
-                  padding:
-                      EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     vertical: 20,
                   ),
                   child: Center(
@@ -386,9 +326,7 @@ class _HomeAnniversarySelectionPageState
                     ),
                   ),
                 ),
-
-              for (final anniversary
-                  in unselectedAnniversaries)
+              for (final anniversary in unselectedAnniversaries)
                 Card(
                   child: ListTile(
                     leading: Icon(
@@ -396,23 +334,17 @@ class _HomeAnniversarySelectionPageState
                         anniversary.type,
                       ),
                     ),
-
                     title: Text(
                       anniversary.title,
                     ),
-
                     subtitle: Text(
                       '${anniversaryTypeLabel(anniversary)}'
                       ' · '
                       '${anniversary.anniversaryDate}',
                     ),
-
-                    trailing:
-                        IconButton(
-                      tooltip:
-                          'Home에 추가',
-                      icon:
-                          const Icon(
+                    trailing: IconButton(
+                      tooltip: 'Home에 추가',
+                      icon: const Icon(
                         Icons.add,
                       ),
                       onPressed: () {
@@ -435,32 +367,24 @@ class _HomeAnniversarySelectionPageState
         SafeArea(
           top: false,
           child: Padding(
-            padding:
-                const EdgeInsets.all(
+            padding: const EdgeInsets.all(
               16,
             ),
             child: SizedBox(
-              width:
-                  double.infinity,
+              width: double.infinity,
               child: FilledButton(
-                onPressed:
-                    _saving
-                        ? null
-                        : _save,
-                child:
-                    _saving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child:
-                                CircularProgressIndicator(
-                              strokeWidth:
-                                  2,
-                            ),
-                          )
-                        : const Text(
-                            '저장',
-                          ),
+                onPressed: _saving ? null : _save,
+                child: _saving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        '저장',
+                      ),
               ),
             ),
           ),
@@ -490,12 +414,10 @@ class _HomeAnniversarySelectionPageState
      */
     final success = await ref
         .read(
-          homeAnniversarySelectionProvider
-              .notifier,
+          homeAnniversarySelectionProvider.notifier,
         )
         .save(
-          anniversaryIds:
-              List<int>.from(
+          anniversaryIds: List<int>.from(
             _selectedIds,
           ),
         );
@@ -511,10 +433,8 @@ class _HomeAnniversarySelectionPageState
     if (!success) {
       TopNotification.show(
         context,
-        message:
-            'Home 기념일 설정을 저장하지 못했습니다.',
-        type:
-            TopNotificationType.error,
+        message: 'Home 기념일 설정을 저장하지 못했습니다.',
+        type: TopNotificationType.error,
       );
 
       return;
@@ -522,10 +442,8 @@ class _HomeAnniversarySelectionPageState
 
     TopNotification.show(
       context,
-      message:
-          'Home 기념일 설정이 저장되었습니다.',
-      type:
-          TopNotificationType.success,
+      message: 'Home 기념일 설정이 저장되었습니다.',
+      type: TopNotificationType.success,
     );
 
     Navigator.of(

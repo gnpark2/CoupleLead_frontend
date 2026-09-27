@@ -3,16 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/ui/top_notification.dart';
-import '../../anniversary/presentation/anniversary_provider.dart';
 import '../../auth/presentation/auth_provider.dart';
-import '../../user/presentation/user_provider.dart';
 import '../../user/presentation/withdraw_dialog.dart';
-import '../../widget/presentation/widget_provider.dart';
 import 'couple_provider.dart';
-import 'couple_realtime_provider.dart';
 
 class CoupleConnectPage extends ConsumerStatefulWidget {
   const CoupleConnectPage({

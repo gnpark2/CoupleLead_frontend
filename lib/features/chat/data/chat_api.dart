@@ -7,7 +7,6 @@ import 'model/chat_history_page.dart';
 import 'model/chat_image_upload_result.dart';
 import 'model/chat_message.dart';
 import 'model/chat_search_page.dart';
-import 'model/chat_search_result.dart';
 import 'model/chat_unread_boundary.dart';
 import 'model/pending_chat_image.dart';
 

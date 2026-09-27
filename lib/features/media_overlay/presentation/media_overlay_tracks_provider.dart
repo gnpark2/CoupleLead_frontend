@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:livekit_client/livekit_client.dart';
-
-import '../../media/presentation/media_room_provider.dart';
 import 'media_overlay_room_provider.dart';
 import 'model/media_overlay_track.dart';
 

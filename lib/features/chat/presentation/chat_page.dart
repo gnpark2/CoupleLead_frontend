@@ -8,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:public_file_saver/public_file_saver.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:uuid/uuid.dart';
-import '../../../core/constants/api_constants.dart';
 import '../../../core/utils/media_url_utils.dart';
 import '../../../core/widgets/authenticated_network_image.dart';
 import '../../user/presentation/user_provider.dart';
@@ -27,7 +26,6 @@ import 'chat_provider.dart';
 import 'chat_realtime_controller.dart';
 import 'chat_realtime_state.dart';
 import 'chat_image_editor_page.dart';
-import 'chat_visibility_provider.dart';
 import 'chat_visibility_service.dart';
 
 class ChatPage extends ConsumerStatefulWidget {

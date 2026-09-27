@@ -270,33 +270,3 @@ class _AnniversaryListCard extends ConsumerWidget {
     );
   }
 }
-
-String _anniversaryTypeLabel(
-  Anniversary anniversary,
-) {
-  switch (anniversary.type) {
-    case 'COUPLE_START':
-      return '커플 시작일';
-
-    case 'BIRTHDAY':
-      return '생일';
-
-    case 'FIRST_DATE':
-      return '첫 데이트';
-
-    case 'TRAVEL':
-      return '여행';
-
-    case 'CUSTOM':
-      final custom = anniversary.customTypeName;
-
-      if (custom == null || custom.trim().isEmpty) {
-        return '직접 지정';
-      }
-
-      return custom;
-
-    default:
-      return '기념일';
-  }
-}

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:window_manager/window_manager.dart';
-
-import '../../../core/desktop/desktop_media_overlay_window_service.dart';
 import '../data/model/media_overlay_settings.dart';
 import 'media_overlay_room_provider.dart';
 import 'media_overlay_tracks_provider.dart';

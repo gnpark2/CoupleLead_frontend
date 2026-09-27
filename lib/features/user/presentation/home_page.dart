@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/desktop/desktop_overlay_window_service.dart';
-import '../../../core/desktop/desktop_window_service.dart';
 import '../../../core/utils/media_url_utils.dart';
 import '../../../core/utils/weather_icon_utils.dart';
 import '../../anniversary/data/model/anniversary.dart';
 import '../../anniversary/presentation/anniversary_page.dart';
 import '../../anniversary/presentation/anniversary_provider.dart';
 import '../../auth/presentation/auth_provider.dart';
-import '../../chat/presentation/chat_visibility_provider.dart';
 import '../../media/presentation/media_provider.dart';
-import '../../overlay/presentation/overlay_page.dart';
 import '../../overlay/presentation/overlay_settings_page.dart';
 import '../../weather/presentation/local_time_provider.dart';
 import '../../weather/presentation/weather_provider.dart';

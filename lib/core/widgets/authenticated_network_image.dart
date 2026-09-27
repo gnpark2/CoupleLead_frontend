@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/presentation/auth_provider.dart';
 
-class AuthenticatedNetworkImage
-    extends ConsumerWidget {
+class AuthenticatedNetworkImage extends ConsumerWidget {
   final String url;
 
   final double? width;
@@ -38,8 +37,7 @@ class AuthenticatedNetworkImage
     BuildContext context,
     WidgetRef ref,
   ) {
-    final tokenAsync =
-        ref.watch(
+    final tokenAsync = ref.watch(
       accessTokenProvider,
     );
 
@@ -49,8 +47,7 @@ class AuthenticatedNetworkImage
           width: width,
           height: height,
           child: const Center(
-            child:
-                CircularProgressIndicator(),
+            child: CircularProgressIndicator(),
           ),
         );
       },
@@ -90,35 +87,30 @@ class AuthenticatedNetworkImage
           width: width,
           height: height,
           fit: fit,
-          headers:
-              accessToken == null
-                  ? null
-                  : {
-                      'Authorization':
-                          'Bearer $accessToken',
-                    },
-          loadingBuilder:
-              loadingBuilder,
-          errorBuilder:
-              errorBuilder ??
-                  (
-                    context,
-                    error,
-                    stackTrace,
-                  ) {
-                    debugPrint(
-                      '[AUTH IMAGE ERROR] '
-                      'url=$url '
-                      'error=$error',
-                    );
+          headers: accessToken == null
+              ? null
+              : {
+                  'Authorization': 'Bearer $accessToken',
+                },
+          loadingBuilder: loadingBuilder,
+          errorBuilder: errorBuilder ??
+              (
+                context,
+                error,
+                stackTrace,
+              ) {
+                debugPrint(
+                  '[AUTH IMAGE ERROR] '
+                  'url=$url '
+                  'error=$error',
+                );
 
-                    return const Center(
-                      child: Icon(
-                        Icons
-                            .broken_image_outlined,
-                      ),
-                    );
-                  },
+                return const Center(
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                  ),
+                );
+              },
         );
       },
     );

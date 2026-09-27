@@ -3,7 +3,6 @@ import 'package:stomp_dart_client/stomp_dart_client.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/websocket/stomp_provider.dart';
-import '../../auth/presentation/auth_provider.dart';
 
 final coupleRealtimeProvider = Provider.family<CoupleRealtimeController, int>(
   (

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/network/dio_client.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../data/model/hourly_weather.dart';
 import '../data/weather_api.dart';

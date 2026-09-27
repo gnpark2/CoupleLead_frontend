@@ -8,7 +8,6 @@ import 'package:uuid/uuid.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/websocket/stomp_provider.dart';
 import '../../../core/websocket/stomp_service.dart';
-import '../../auth/presentation/auth_provider.dart';
 import '../../widget/presentation/widget_provider.dart';
 import '../data/domain/ChatMessageSendStatus.dart';
 import '../data/model/chat_message.dart';

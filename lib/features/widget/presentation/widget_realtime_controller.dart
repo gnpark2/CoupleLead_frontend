@@ -3,17 +3,12 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
-import 'package:window_manager/window_manager.dart';
 
-import '../../../core/constants/api_constants.dart';
 import '../../../core/desktop/chat_notification_window_service.dart';
-import '../../../core/navigation/app_navigator.dart';
-import '../../../core/notification/in_app_notification_service.dart';
-import '../../../core/notification/local_notification_service.dart';
 import '../../../core/websocket/stomp_provider.dart';
-import '../../auth/presentation/auth_provider.dart';
 import '../../chat/presentation/chat_visibility_provider.dart';
 import '../../settings/presentation/notification_settings_provider.dart';
+
 import 'widget_provider.dart';
 import 'widget_realtime_key.dart';
 

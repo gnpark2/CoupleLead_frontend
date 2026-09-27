@@ -16,13 +16,10 @@ class CreateAnniversaryRequest {
   Map<String, dynamic> toJson() {
     return {
       'title': title,
-      'anniversaryDate':
-          anniversaryDate,
+      'anniversaryDate': anniversaryDate,
       'type': type,
-      'repeatType':
-          repeatType,
-      'customTypeName':
-          customTypeName,
+      'repeatType': repeatType,
+      'customTypeName': customTypeName,
     };
   }
 }
